@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cloudformation template to create Glue Workflow to automate forecast generation with Amazon Forecast
+Parameters:
+  DBInstanceName:
+    Description: Database instance name
+    Type: String
+  MasterPassword:
+    Description: Master user password
+    Type: String
+  IngressCIDR:
+    Description: Provide CIDR if you want external connection into db
+    Type: String
+Resources:
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties: 
+      Tags: 
+        - 
+          Key: 'Name'
+          Value: 'Forecast blog demo'
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: '10.1.0.0/16'
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: 
+        - 
+          Key: 'Name'
+          Value: 'Forecast blog demo'
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: 'us-west-2a'
+      CidrBlock: '10.1.1.0/24'
+      Tags: 
+        - 
+          Key: 'Name'
+          Value: 'Forecast blog demo'
+      VpcId: !Ref VPC
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: 'us-west-2b'
+      CidrBlock: '10.1.2.0/24'
+      Tags: 
+        - 
+          Key: 'Name'
+          Value: 'Forecast blog demo'
+      VpcId: !Ref VPC
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: 'Forecast blog demo'
+  RouteTableUpdate:  
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnet1RouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+  PublicSubnet1RouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+  VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      RouteTableIds: 
+        - !Ref PublicRouteTable
+      ServiceName: 'com.amazonaws.us-west-2.s3'
+      VpcEndpointType: 'Gateway'
+      VpcId: !Ref VPC
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: 'Forecast blog demo db subnet group'
+      DBSubnetGroupName: 'Forecast-blog-demo'
+      SubnetIds: 
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: 'Forecast blog demo security group for database'
+      GroupName: 'forecast-blog-sg'
+      Tags: 
+        - 
+          Key: 'Name'
+          Value: 'Forecast blog demo'
+      VpcId: !Ref VPC
+  SGIngress1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      CidrIp: !Ref IngressCIDR
+      Description: 'External access'
+      FromPort: 3306
+      ToPort: 3306
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+  SGIngress2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      FromPort: 0
+      ToPort: 65535
+      GroupId: !Ref SecurityGroup
+      SourceSecurityGroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+  RDS:
+    Type: AWS::RDS::DBInstance
+    Properties: 
+      BackupRetentionPeriod: 0
+      CACertificateIdentifier: 'rds-ca-2019'
+      DBInstanceClass: 'db.m4.large'
+      DBInstanceIdentifier: !Ref DBInstanceName
+      DBSnapshotIdentifier: 'arn:aws:rds:us-west-2:946827581022:snapshot:forecast-blog-db'
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      MasterUserPassword: !Ref MasterPassword
+      PubliclyAccessible: true
+      VPCSecurityGroups: 
+        - !Ref SecurityGroup
+      Tags: 
+        - 
+          Key: 'Name'
+          Value: 'Forecast blog demo'
+Outputs:
+  ForcastBlogDB:
+    Value: !Ref RDS
+    Description: Forecast blog database

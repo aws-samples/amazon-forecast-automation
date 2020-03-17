@@ -9,7 +9,7 @@ glue_client = session.client(service_name='glue')
 
 dt = datetime.datetime.now()
 project = 'inventory_forecast_' + dt.strftime('%d_%m_%y')
-predictorName= project + '_AutoML'
+predictorName= project + '_ETS'
 forecastHorizon = 10
 workflowName = 'AmazonForecastWorkflow'
 workflow = glue_client.get_workflow(Name=workflowName)
