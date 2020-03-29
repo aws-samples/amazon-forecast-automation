@@ -1,8 +1,7 @@
 {
     "Version": "2012-10-17",
     "Statement": [
-	{
-            "Sid": "Lakeformation",
+        {
             "Effect": "Allow",
             "Action": [
                 "lakeformation:GetDataAccess",
@@ -19,33 +18,9 @@
                 "s3:ListBucket"
             ],
             "Resource": [
-                "arn:aws:s3:::forecast-blog-landing/*",
-                "arn:aws:s3:::forecast-blog-landing",
                 "arn:aws:s3:::forecast-blog-processed/*",
-                "arn:aws:s3:::forecast-blog-processed"
+                "arn:aws:s3:::forecast-blog-published/*"
             ]
-        },
-        {
-            "Action": [
-                "glue:CreateJob",
-                "glue:CreateTable",
-                "glue:StartCrawler",
-                "glue:CreateDatabase",
-                "glue:StartJobRun",
-                "glue:StopCrawler",
-                "glue:CreatePartition",
-                "glue:GetJob",
-                "glue:StartTrigger",
-                "glue:CreateCrawler",
-                "glue:GetJobRun",
-                "glue:GetWorkflow",
-                "glue:PutWorkflowRunProperties",
-                "glue:GetWorkflowRunProperties",
-                "glue:StartWorkflowRun"
-            ],
-            "Resource": "*",
-            "Effect": "Allow",
-            "Sid": "gluePermissions"
         },
         {
             "Effect": "Allow",
@@ -57,24 +32,13 @@
         {
             "Effect": "Allow",
             "Action": [
+                "iam:PassRole",
                 "iam:GetRole"
             ],
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "sns:ListTopics",
-                "sns:Publish"
+            "Resource": [
+                "arn:aws:iam::*:role/AWSGlueServiceRole*",
+                "arn:aws:iam::[your aws account id]:role/GLUE_WORKFLOW_ROLE"
             ],
-            "Resource": "*"
-        },
-        {
-            "Action": [
-                "iam:PassRole"
-            ],
-            "Effect": "Allow",
-            "Resource": "arn:aws:iam::*:role/AWSGlueServiceRole*",
             "Condition": {
                 "StringLike": {
                     "iam:PassedToService": [
@@ -86,29 +50,15 @@
         {
             "Effect": "Allow",
             "Action": [
-                "iam:PassRole"
+                "iam:PassRole",
+                "iam:GetRole"
             ],
-            "Resource": "*",
+            "Resource": "arn:aws:iam::[your aws account id]:role/GLUE_WORKFLOW_ROLE",
             "Condition": {
                 "StringEquals": {
                     "iam:PassedToService": "forecast.amazonaws.com"
                 }
             }
-        },
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "PassRolePermissions",
-                    "Effect": "Allow",
-                    "Action": [
-                        "iam:PassRole"
-                    ],
-                    "Resource": [
-                        "arn:aws:iam::[Your AWS account id]:role/AWS_GLUE_WORKFLOW_ROLE"
-                    ]
-                }
-            ]
         }
     ]
 }

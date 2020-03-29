@@ -11,17 +11,19 @@ workflowName = 'AmazonForecastWorkflow'
 workflow = glue_client.get_workflow(Name=workflowName)
 workflow_params = workflow['Workflow']['LastRun']['WorkflowRunProperties']
 workflowRunId = workflow['Workflow']['LastRun']['WorkflowRunId']
-orders_import_job_arn = workflow_params['ordersImportJobRunId']
-products_import_job_arn = workflow_params['productsImportJobRunId']
+orders_import_ds_arn = workflow_params['targetTimeSeriesDataset']
+products_import_ds_arn = workflow_params['itemMetaDataset']
 # initialise import job status for while loop
-ordersDataImportStatus = forecast.describe_dataset_import_job(DatasetImportJobArn=orders_import_job_arn)['Status']
-productsDataImportStatus = forecast.describe_dataset_import_job(DatasetImportJobArn=products_import_job_arn)['Status']
+ordersDataImportStatus = forecast.describe_dataset(DatasetArn=orders_import_ds_arn)['Status']
+productsDataImportStatus = forecast.describe_dataset(DatasetArn=products_import_ds_arn)['Status']
 
-while (ordersDataImportStatus != 'ACTIVE' and productsDataImportStatus != 'ACTIVE'):
-    ordersDataImportStatus = forecast.describe_dataset_import_job(DatasetImportJobArn=orders_import_job_arn)['Status']
-    productsDataImportStatus = forecast.describe_dataset_import_job(DatasetImportJobArn=products_import_job_arn)['Status']
-    if (ordersDataImportStatus == 'CREATE_FAILED' or productsDataImportStatus == 'CREATE_FAILED'):
+while True:    
+    if (ordersDataImportStatus == 'ACTIVE' and productsDataImportStatus == 'ACTIVE'):
+        break
+    elif (ordersDataImportStatus == 'CREATE_FAILED' or productsDataImportStatus == 'CREATE_FAILED'):
         raise NameError('Import create failed')
+    ordersDataImportStatus = forecast.describe_dataset(DatasetArn=orders_import_ds_arn)['Status']
+    productsDataImportStatus = forecast.describe_dataset(DatasetArn=products_import_ds_arn)['Status']       
     time.sleep(20)
 
 print ('Orders Import status is: ' + ordersDataImportStatus)

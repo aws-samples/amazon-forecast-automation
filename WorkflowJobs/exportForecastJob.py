@@ -8,7 +8,7 @@ forecast = session.client(service_name='forecast')
 glue_client = session.client(service_name='glue')
 s3 = session.resource('s3')
 iam = session.resource('iam')
-role = iam.Role('AmazonForecast-ExecutionRole-1569298163518')
+role = iam.Role('GLUE_WORKFLOW_ROLE')
 
 workflowName = 'AmazonForecastWorkflow'
 workflow = glue_client.get_workflow(Name=workflowName)

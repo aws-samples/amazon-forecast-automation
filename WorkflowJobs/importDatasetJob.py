@@ -11,7 +11,7 @@ workflowName = 'AmazonForecastWorkflow'
 workflow = glue_client.get_workflow(Name=workflowName)
 workflow_params = workflow['Workflow']['LastRun']['WorkflowRunProperties']
 workflowRunId = workflow['Workflow']['LastRun']['WorkflowRunId']
-
+iam = session.resource('iam')
 
 # In our dataset, the timeseries values are recorded every day
 DATASET_FREQUENCY = "D" 
@@ -24,7 +24,7 @@ datasetGroupName = project + '_dsg'
 bucket_name = workflow_params['processedBucket']
 orders_file = 'orders/orders-data.csv'
 products_file = 'products/product-data.csv'
-role_arn = 'arn:aws:iam::123456789012:role/service-role/AmazonForecast-ExecutionRole-1569298163518'
+role = iam.Role('GLUE_WORKFLOW_ROLE')
 s3DataPathOrders = 's3://' + bucket_name + '/' + orders_file
 s3DataPathProducts = 's3://' + bucket_name + '/' + products_file
 
@@ -64,14 +64,14 @@ def start_orders_import_job(s3DataPath, datasetName, datasetGroupArn, role_arn):
                     DataFrequency=DATASET_FREQUENCY, 
                     Schema = schema)
 
-    datasetArn = response['DatasetArn']
-
-    updateDatasetResponse = forecast.update_dataset_group(DatasetGroupArn=datasetGroupArn, DatasetArns=[datasetArn])
+    TargetdatasetArn = response['DatasetArn']
+    workflow_params['targetTimeSeriesDataset'] = TargetdatasetArn
+    updateDatasetResponse = forecast.update_dataset_group(DatasetGroupArn=datasetGroupArn, DatasetArns=[TargetdatasetArn])
 
     # Orders dataset import job
     datasetImportJobName = 'INVENTORY_DSIMPORT_JOB_TARGET'
     ds_import_job_response=forecast.create_dataset_import_job(DatasetImportJobName=datasetImportJobName,
-                                                            DatasetArn=datasetArn,
+                                                            DatasetArn=TargetdatasetArn,
                                                             DataSource= {
                                                                 "S3Config" : {
                                                                     "Path": s3DataPathOrders,
@@ -88,7 +88,7 @@ def start_orders_import_job(s3DataPath, datasetName, datasetGroupArn, role_arn):
     return {
     "importJobArn": ds_import_job_arn,
     "datasetGroupArn": datasetGroupArn,
-    "ordersDatasetArn": datasetArn
+    "ordersDatasetArn": TargetdatasetArn
     }
 
 def start_products_import_job(s3DataPath, datasetName, datasetGroupArn, role_arn, ordersDatasetArn):
@@ -117,14 +117,14 @@ def start_products_import_job(s3DataPath, datasetName, datasetGroupArn, role_arn
                     DataFrequency=DATASET_FREQUENCY, 
                     Schema = schema)
 
-    datasetArn = response['DatasetArn']
-
-    updateDatasetResponse = forecast.update_dataset_group(DatasetGroupArn=datasetGroupArn, DatasetArns=[ordersDatasetArn, datasetArn])
+    metaDatasetArn = response['DatasetArn']
+    workflow_params['itemMetaDataset'] = metaDatasetArn
+    updateDatasetResponse = forecast.update_dataset_group(DatasetGroupArn=datasetGroupArn, DatasetArns=[ordersDatasetArn, metaDatasetArn])
 
     # Dataset import job
     datasetImportJobName = 'INVENTORY_DSIMPORT_JOB_METADATA'
     ds_import_job_response=forecast.create_dataset_import_job(DatasetImportJobName=datasetImportJobName,
-                                                          DatasetArn=datasetArn,
+                                                          DatasetArn=metaDatasetArn,
                                                           DataSource= {
                                                               "S3Config" : {
                                                                  "Path": s3DataPathProducts,
@@ -139,8 +139,8 @@ def start_products_import_job(s3DataPath, datasetName, datasetGroupArn, role_arn
     workflow_params['productsImportJobRunId'] = ds_import_job_arn
     return
 
-orders_import_result = start_orders_import_job(s3DataPathOrders, datasetName, datasetGroupArn, role_arn)
-products_import_result = start_products_import_job(s3DataPathProducts, datasetName, datasetGroupArn, role_arn, orders_import_result['ordersDatasetArn'])
+orders_import_result = start_orders_import_job(s3DataPathOrders, datasetName, datasetGroupArn, role.arn)
+products_import_result = start_products_import_job(s3DataPathProducts, datasetName, datasetGroupArn, role.arn, orders_import_result['ordersDatasetArn'])
 
 glue_client.put_workflow_run_properties(Name=workflowName, RunId=workflowRunId, RunProperties=workflow_params)
 workflow_params = glue_client.get_workflow_run_properties(Name=workflowName,
@@ -149,3 +149,5 @@ workflow_params = glue_client.get_workflow_run_properties(Name=workflowName,
 print('output OrdersImportJObId is: ' + workflow_params['ordersImportJobRunId'])
 print('output ProductsImportJObId is: ' + workflow_params['productsImportJobRunId'])
 print('output Dataset Group Arn is: ' + workflow_params['datasetGroupArn'])
+print('output Item Dataset Arn is: ' + workflow_params['targetTimeSeriesDataset'])
+print('output Meta Dataset Arn is: ' + workflow_params['itemMetaDataset'])
