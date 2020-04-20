@@ -125,7 +125,7 @@ Resources:
     Properties: 
       BackupRetentionPeriod: 0
       CACertificateIdentifier: 'rds-ca-2019'
-      DBInstanceClass: 'db.m4.large'
+      DBInstanceClass: 'db.t2.micro'
       DBInstanceIdentifier: !Ref DBInstanceName
       DBSnapshotIdentifier: 'arn:aws:rds:us-west-2:946827581022:snapshot:forecast-blog-db'
       DBSubnetGroupName: !Ref RDSSubnetGroup
