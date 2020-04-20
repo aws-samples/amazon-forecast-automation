@@ -3,9 +3,24 @@ An end to end inventory forecasting demo using AWS Lake Formation for data lake 
 
 AWS Glue jobs orchestrated via AWS Glue Workflow to automate the data import, training the predictor and generating forecast export from the Amazon Forecast service.
 
-This is the supporting code for the blog <b> "Building end to end automated inventory forecasting capability with AWS Lake Formation and Amazon Forecast" </b>.
+This is the supporting code for the blogpost <b> "Building end to end automated inventory forecasting capability with AWS Lake Formation and Amazon Forecast" </b>.
 
 ![Solution Architecture](images/InventoryForecast.png)
+
+## Instructions
+1. Create an IAM role for the Glue service and add a trust policy for Amazon Forecast
+2. Attach the in-line IAM policy from this repo to the Glue IAM role
+3. Create the AWS Glue jobs from this repo
+4. Create an AWS Glue Workflow to orchestrate the Glue jobs in the following order with an event trigger in the middle of each:  
+4.1 spark-transform-rawdata.py  
+4.2 importDatasetJob.py  
+4.2 checkImportJob.py  
+4.3 trainPredictorJob.py  
+4.4 checkPredictorJob.py  
+4.5 createForecastJob.py  
+4.6 checkForecastJob.py  
+4.7 exportForecastJob.py  
+4.6 checkExportJob.py
 
 ## Components
 1. AWS Glue PySpark job to transform raw data into required format for Amazon Forecast
