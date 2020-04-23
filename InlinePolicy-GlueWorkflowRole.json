@@ -25,7 +25,25 @@
         {
             "Effect": "Allow",
             "Action": [
-                "forecast:*"
+  "forecast:CreateDataset",
+  "forecast:CreateDatasetGroup",
+  "forecast:CreateDatasetImportJob",
+  "forecast:CreateForecast",
+  "forecast:CreateForecastExportJob",
+  "forecast:CreatePredictor",
+  "forecast:DescribeDataset",
+  "forecast:DescribeDatasetGroup",
+  "forecast:DescribeDatasetImportJob",
+  "forecast:DescribeForecast",
+  "forecast:DescribeForecastExportJob",
+  "forecast:DescribePredictor",
+  "forecast:ListDatasetGroups",
+  "forecast:ListDatasetImportJobs",
+  "forecast:ListDatasets",
+  "forecast:ListForecastExportJobs",
+  "forecast:ListForecasts",
+  "forecast:ListPredictors",
+  "forecast:UpdateDatasetGroup"
             ],
             "Resource": "*"
         },
