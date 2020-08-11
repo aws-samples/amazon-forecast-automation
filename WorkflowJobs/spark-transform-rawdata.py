@@ -2,7 +2,6 @@ import sys
 import boto3
 import pyspark.sql.functions as F
 from awsglue.transforms import *
-from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
@@ -10,7 +9,7 @@ from awsglue.job import Job
 glueContext = GlueContext(SparkContext.getOrCreate())
 spark = glueContext.spark_session
 
-session = boto3.Session(region_name='us-west-2') 
+session = boto3.Session()
 glue_client = session.client(service_name='glue')
 
 ## @params: [JOB_NAME]
