@@ -1,6 +1,7 @@
 import sys
 import boto3
 import datetime
+import random
 
 session = boto3.Session()
 forecast = session.client(service_name='forecast') 
@@ -16,8 +17,8 @@ iam = session.resource('iam')
 DATASET_FREQUENCY = "D" 
 TIMESTAMP_FORMAT = "yyyy-MM-dd hh:mm:ss"
 
-dt = datetime.datetime.now()
-project = 'inventory_forecast_' + dt.strftime('%d_%m_%y') 
+rnd = str(random.getrandbits(12))
+project = 'inventory_forecast_' + rnd
 datasetName = project + '_ds'
 datasetGroupName = project + '_dsg'
 bucket_name = workflow_params['processedBucket']
@@ -32,6 +33,7 @@ create_dataset_group_response = forecast.create_dataset_group(DatasetGroupName=d
                                                             )
 datasetGroupArn = create_dataset_group_response['DatasetGroupArn']
 workflow_params['datasetGroupArn'] = datasetGroupArn
+workflow_params['projectName'] = project
 
 def start_orders_import_job(s3DataPath, datasetName, datasetGroupArn, role_arn):
     # Specify the schema of your dataset here. Make sure the order of columns matches the raw data files.

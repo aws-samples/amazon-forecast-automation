@@ -1,21 +1,18 @@
 import sys
 import boto3
-import datetime
 
 session = boto3.Session()
 forecast = session.client(service_name='forecast') 
 glue_client = session.client(service_name='glue')
 
-dt = datetime.datetime.now()
-project = 'inventory_forecast_' + dt.strftime('%d_%m_%y')
-predictorName= project + '_ETS'
 forecastHorizon = 90
 workflowName = 'AmazonForecastWorkflow'
 workflow = glue_client.get_workflow(Name=workflowName)
 workflow_params = workflow['Workflow']['LastRun']['WorkflowRunProperties']
 workflowRunId = workflow['Workflow']['LastRun']['WorkflowRunId']
 datasetGroupArn = workflow_params['datasetGroupArn']
-
+project = workflow_params['projectName']
+predictorName= project + '_ETS'
 
 create_predictor_response=forecast.create_predictor(PredictorName=predictorName,
                                                 AlgorithmArn='arn:aws:forecast:::algorithm/ETS',
