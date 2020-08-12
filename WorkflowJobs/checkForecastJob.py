@@ -1,9 +1,8 @@
 import sys
 import boto3
 import time
-from awsglue.utils import getResolvedOptions
 
-session = boto3.Session(region_name='us-west-2') 
+session = boto3.Session()
 forecast = session.client(service_name='forecast') 
 glue_client = session.client(service_name='glue')
 
