@@ -7,6 +7,7 @@ Parameters:
   MasterPassword:
     Description: Master user password
     Type: String
+    NoEcho: True
   IngressCIDR:
     Description: Provide CIDR to whitelist for external connection into db
     Type: String
